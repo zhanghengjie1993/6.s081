@@ -273,6 +273,9 @@ fork(void)
     release(&np->lock);
     return -1;
   }
+
+  np->syscall = p->syscall;
+
   np->sz = p->sz;
 
   np->parent = p;

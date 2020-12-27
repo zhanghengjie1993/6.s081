@@ -100,6 +100,7 @@ sys_close(void)
   if(argfd(0, &fd, &f) < 0)
     return -1;
   myproc()->ofile[fd] = 0;
+  // myproc()->syscall = 0;
   fileclose(f);
   return 0;
 }
