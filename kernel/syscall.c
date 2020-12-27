@@ -170,15 +170,8 @@ syscall(void)
     acquire(&tickslock);
     syscall = p->syscall;
     release(&tickslock);
-    if((syscall & (1<<num)) != 0){
-      printf("syscall is %d\n", syscall);
+    if((syscall & (1<<num)) != 0)
       printf("%d: syscall %s -> %d\n", pid, sysname[num], p->trapframe->a0);        
-    }
-    if(num == SYS_close){
-      acquire(&tickslock);
-      p->syscall = 0;
-      release(&tickslock);
-    }
   } else {
     printf("%d %s: unknown sys call %d\n",
             p->pid, p->name, num);
