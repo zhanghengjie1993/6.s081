@@ -85,6 +85,29 @@ allocpid() {
   return pid;
 }
 
+uint64
+unusednum(){
+  // int i = 1;
+  uint64 num = 0;
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++)
+  {
+    // acquire(&p->lock);
+    // printf("p->state is %s", p->state);
+    // release(&p->lock);
+    acquire(&p->lock);
+    // printf("%d---p->state is %d\n", i++, p->state);
+    if (p->state == UNUSED){
+      num++;
+      release(&p->lock);
+    }
+    else
+      release(&p->lock);
+  }
+  // printf("------- num is %d\n", num);
+  return num;
+}
+
 // Look in the process table for an UNUSED proc.
 // If found, initialize state required to run in the kernel,
 // and return with p->lock held.
