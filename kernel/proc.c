@@ -12,6 +12,8 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+extern char etext[];  // kernel.ld sets this to end of kernel code.
+
 int nextpid = 1;
 struct spinlock pid_lock;
 
@@ -34,12 +36,12 @@ procinit(void)
       // Allocate a page for the process's kernel stack.
       // Map it high in memory, followed by an invalid
       // guard page.
-      char *pa = kalloc();
-      if(pa == 0)
-        panic("kalloc");
-      uint64 va = KSTACK((int) (p - proc));
-      kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
-      p->kstack = va;
+      // char *pa = kalloc();
+      // if(pa == 0) 
+      //   panic("kalloc");
+      // uint64 va = KSTACK((int) (p - proc));
+      // kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+      // p->kstack = va;
   }
   kvminithart();
 }
@@ -113,6 +115,14 @@ found:
     return 0;
   }
 
+  p->kpagetable = kvmpinit();
+  char *pa = kalloc();
+  if(pa == 0)
+    panic("kalloc");
+  uint64 va = KSTACK((int) (p - proc));
+  kvmpmap(p->kpagetable, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+  p->kstack = va;
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -130,6 +140,28 @@ found:
   return p;
 }
 
+
+void 
+proc_freekpt(pagetable_t pagetable)
+{
+  // there are 2^9 = 512 PTEs in a page table.
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if((pte & PTE_V)){
+      pagetable[i] = 0;
+      if ((pte & (PTE_R|PTE_W|PTE_X)) == 0)
+      {
+        uint64 child = PTE2PA(pte);
+        proc_freekpt((pagetable_t)child);
+      }
+    } else if(pte & PTE_V){
+      panic("proc free kpt: leaf");
+    }
+  }
+  kfree((void*)pagetable);
+}
+
+
 // free a proc structure and the data hanging from it,
 // including user pages.
 // p->lock must be held.
@@ -141,6 +173,20 @@ freeproc(struct proc *p)
   p->trapframe = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
+  // if(p->kpagetable)
+  //   proc_freekpagetable(p->kpagetable, p->kstack);
+
+  if (p->kstack)
+  {
+    pte_t* pte = walk(p->kpagetable, p->kstack, 0);
+    if (pte == 0)
+      panic("freeproc: walk");
+    kfree((void*)PTE2PA(*pte));
+  }
+  if (p->kpagetable)
+    proc_freekpt(p->kpagetable);
+  p->kstack = 0;
+  p->kpagetable=0;
   p->pagetable = 0;
   p->sz = 0;
   p->pid = 0;
@@ -194,6 +240,19 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
   uvmfree(pagetable, sz);
 }
+
+// void
+// proc_freekpagetable(pagetable_t pagetable, uint64 kstack)
+// {
+//   uvmunmap(pagetable, kstack, 1, 1);
+//   uvmunmap(pagetable, UART0, 1, 0);
+//   uvmunmap(pagetable, VIRTIO0, 1, 0);
+//   uvmunmap(pagetable, CLINT, 0x10000/PGSIZE, 0);
+//   uvmunmap(pagetable, PLIC, 0x400000/PGSIZE, 0);
+//   uvmunmap(pagetable, KERNBASE, ((uint64)etext-KERNBASE)/PGSIZE, 0);
+//   uvmunmap(pagetable, (uint64)etext, (PHYSTOP-(uint64)etext)/PGSIZE, 0);
+//   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+// }
 
 // a user program that calls exec("/init")
 // od -t xC initcode
@@ -473,8 +532,10 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+        w_satp(MAKE_SATP(p->kpagetable));
+        sfence_vma();
         swtch(&c->context, &p->context);
-
+        kvminithart();
         // Process is done running for now.
         // It should have changed its p->state before coming back.
         c->proc = 0;

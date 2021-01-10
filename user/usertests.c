@@ -959,6 +959,7 @@ reparent2(char *s)
       exit(1);
     }
     if(pid1 == 0){
+      printf("%d reparent2 is runing\n", i);
       fork();
       fork();
       exit(0);
