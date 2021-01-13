@@ -161,10 +161,6 @@ kvmpmap(pagetable_t pagetable, uint64 va, uint64 pa, uint64 sz, int perm)
 {
   if(mappages(pagetable, va, sz, pa, perm) != 0){
     vmprint(pagetable);
-    printf("pagetable is:%p\n", pagetable);
-    printf("va is:%p\n", va);
-    printf("sz is:%p\n", sz);
-    printf("pa is:%p\n", pa);
     panic("kvmpmap");
   }
 }
