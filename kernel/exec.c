@@ -56,10 +56,10 @@ exec(char *path, char **argv)
       goto bad;
     if(loadseg(pagetable, ph.vaddr, ip, ph.off, ph.filesz) < 0)
       goto bad;
-    printf("bofore remap\n");
-    if(copyu2k(pagetable, p->kpagetable, p->sz) < 0)
-      goto bad;
-    printf("after remap\n");
+    // printf("bofore remap\n");
+    // if(copyu2k(pagetable, p->kpagetable, p->sz) < 0)
+    //   goto bad;
+    // printf("after remap\n");
   }
   iunlockput(ip);
   end_op();
@@ -111,6 +111,12 @@ exec(char *path, char **argv)
     if(*s == '/')
       last = s+1;
   safestrcpy(p->name, last, sizeof(p->name));
+
+  if(oldsz > 0)
+    uvmunmap(p->kpagetable, 0, PGROUNDUP(oldsz)/PGSIZE, 0);
+
+  if(copyu2k(pagetable, p->kpagetable, sz) < 0)
+    goto bad;
     
   // Commit to the user image.
   oldpagetable = p->pagetable;
