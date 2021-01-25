@@ -56,10 +56,6 @@ exec(char *path, char **argv)
       goto bad;
     if(loadseg(pagetable, ph.vaddr, ip, ph.off, ph.filesz) < 0)
       goto bad;
-    // printf("bofore remap\n");
-    // if(copyu2k(pagetable, p->kpagetable, p->sz) < 0)
-    //   goto bad;
-    // printf("after remap\n");
   }
   iunlockput(ip);
   end_op();

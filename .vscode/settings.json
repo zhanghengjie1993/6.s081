@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "exception": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "defs.h": "c"
     }
 }

@@ -395,7 +395,7 @@ copyu2k(pagetable_t old, pagetable_t new, uint64 sz)
     if((*pte & PTE_V) == 0)
       panic("copyu2k: page not present");
     pa = PTE2PA(*pte);
-    flags = PTE_FLAGS(*pte) & 0x3EF;
+    flags = PTE_FLAGS(*pte) & (~PTE_U);
     if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       goto err;
     }
@@ -407,6 +407,30 @@ copyu2k(pagetable_t old, pagetable_t new, uint64 sz)
   return -1;
 
 }
+
+// int copyu2k(pagetable_t old, pagetable_t new, uint64 st, uint64 en){
+//       pte_t *pte;
+//     uint64 pa, i;
+//     uint flags;
+
+//     if (en > PLIC) return -1;
+
+//     st = PGROUNDUP(st);
+
+//     for(i = st; i < en; i += PGSIZE) {
+//         if((pte = walk(old, i, 0)) == 0)
+//             panic("kvmcopy: pte should exist");
+//         if((*pte & PTE_V) == 0)
+//             panic("kvmcopy: page not present");
+//         pa = PTE2PA(*pte);
+//         flags = PTE_FLAGS(*pte) & (~PTE_U);
+//         if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0) goto err;
+//     }
+//     return 0;
+// err:
+//     uvmunmap(new, 0, i / PGSIZE, 0);
+//     return -1;
+// }
 // mark a PTE invalid for user access.
 // used by exec for the user stack guard page.
 void
