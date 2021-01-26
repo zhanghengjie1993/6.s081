@@ -183,7 +183,8 @@ void            vmprint(pagetable_t);
 pagetable_t     kvmpinit(void);
 void            kvmpmap(pagetable_t, uint64, uint64, uint64, int);
 pte_t *         walk(pagetable_t, uint64, int);
-int             copyu2k(pagetable_t, pagetable_t, uint64);
+int             copyu2k(pagetable_t, pagetable_t, uint64, uint64);
+uint64          kuvmdealloc(pagetable_t , uint64 , uint64 );
 
 //vmcopyin.c
 int             copyin_new(pagetable_t, char *, uint64, uint64);

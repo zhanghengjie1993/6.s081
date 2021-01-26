@@ -111,9 +111,9 @@ exec(char *path, char **argv)
   if(oldsz > 0)
     uvmunmap(p->kpagetable, 0, PGROUNDUP(oldsz)/PGSIZE, 0);
 
-  if(copyu2k(pagetable, p->kpagetable, sz) < 0)
+  if(copyu2k(pagetable, p->kpagetable, 0, sz) < 0)
     goto bad;
-    
+
   // Commit to the user image.
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;

@@ -314,6 +314,22 @@ uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
   return newsz;
 }
 
+
+uint64
+kuvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
+{
+  if(newsz >= oldsz)
+    return oldsz;
+
+  if(PGROUNDUP(newsz) < PGROUNDUP(oldsz)){
+    int npages = (PGROUNDUP(oldsz) - PGROUNDUP(newsz)) / PGSIZE;
+    uvmunmap(pagetable, PGROUNDUP(newsz), npages, 0);
+  }
+
+  return newsz;
+}
+
+
 // Recursively free page-table pages.
 // All leaf mappings must already have been removed.
 void
@@ -381,13 +397,15 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 }
 
 int 
-copyu2k(pagetable_t old, pagetable_t new, uint64 sz)
+copyu2k(pagetable_t old, pagetable_t new, uint64 st, uint64 sz)
 {
   pte_t *pte;
   uint64 pa, i;
   uint flags;
 
-  for(i = 0; i < sz; i += PGSIZE){
+  uint64 st = PGROUNDUP(st);
+
+  for(i = st; i < sz; i += PGSIZE){
     if(i >= PLIC)
       panic("copyu2k: adress too high");
     if((pte = walk(old, i, 0)) == 0)
