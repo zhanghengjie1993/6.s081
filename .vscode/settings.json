@@ -3,5 +3,6 @@
         "exception": "cpp",
         "new": "cpp",
         "defs.h": "c"
-    }
+    },
+    "python.pythonPath": "/usr/bin/python3"
 }

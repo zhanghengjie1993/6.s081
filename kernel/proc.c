@@ -306,12 +306,12 @@ growproc(int n)
     if((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
-    if(copyu2k(p->kpagetable, p->pagetable, p->sz, p->sz + n) !=0){
+    if(copyu2k(p->pagetable, p->kpagetable, p->sz, p->sz + n) !=0){
       return -1;
     }
   } else if(n < 0){
-    kuvmdealloc(p->kpagetable, sz, sz + n);
     sz = uvmdealloc(p->pagetable, sz, sz + n);
+    kuvmdealloc(p->kpagetable, p->sz, p->sz + n);
   }
   p->sz = sz;
   return 0;
@@ -338,11 +338,13 @@ fork(void)
     return -1;
   }
 
-  if(copyu2k(p->pagetable, np->kpagetable, 0, p->sz) < 0){
+  if(copyu2k(np->pagetable, np->kpagetable, 0, p->sz) < 0){
     freeproc(np);
     release(&np->lock);
     return -1;
   }
+
+  walk(np->kpagetable, 33554432, 0);
 
   np->sz = p->sz;
 

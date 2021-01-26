@@ -2729,6 +2729,7 @@ main(int argc, char *argv[])
   int fail = 0;
   for (struct test *t = tests; t->s != 0; t++) {
     if((justone == 0) || strcmp(t->s, justone) == 0) {
+      printf("%s is runing\n", t->s);
       if(!run(t->f, t->s))
         fail = 1;
     }

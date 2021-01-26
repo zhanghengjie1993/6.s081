@@ -108,8 +108,8 @@ exec(char *path, char **argv)
       last = s+1;
   safestrcpy(p->name, last, sizeof(p->name));
 
-  if(oldsz > 0)
-    uvmunmap(p->kpagetable, 0, PGROUNDUP(oldsz)/PGSIZE, 0);
+    // uvmunmap(p->kpagetable, 0, PGROUNDUP(oldsz)/PGSIZE, 0);
+  kuvmdealloc(p->kpagetable, oldsz, 0);
 
   if(copyu2k(pagetable, p->kpagetable, 0, sz) < 0)
     goto bad;
