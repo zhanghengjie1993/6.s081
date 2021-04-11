@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 
+char trapframe_alarm[512];
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -113,6 +115,11 @@ found:
     return 0;
   }
 
+  // if((p->ctrapframe = (struct trapframe *)kalloc()) == 0){
+  //   release(&p->lock);
+  //   return 0;
+  // }
+
   // An empty user page table.
   p->pagetable = proc_pagetable(p);
   if(p->pagetable == 0){
@@ -127,6 +134,7 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->tick = 0;
   return p;
 }
 

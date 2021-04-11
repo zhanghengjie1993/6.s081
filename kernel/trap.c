@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 
+extern char trapframe_alarm[512];
+
 struct spinlock tickslock;
 uint ticks;
 
@@ -36,6 +38,7 @@ trapinithart(void)
 void
 usertrap(void)
 {
+
   int which_dev = 0;
 
   if((r_sstatus() & SSTATUS_SPP) != 0)
@@ -46,13 +49,11 @@ usertrap(void)
   w_stvec((uint64)kernelvec);
 
   struct proc *p = myproc();
-  
   // save user program counter.
   p->trapframe->epc = r_sepc();
   
   if(r_scause() == 8){
     // system call
-
     if(p->killed)
       exit(-1);
 
@@ -60,6 +61,8 @@ usertrap(void)
     // but we want to return to the next instruction.
     p->trapframe->epc += 4;
 
+    // if (p->trapframe->a7 == 23)
+    //   printf("the epc value is %d\n", p->trapframe->epc);
     // an interrupt will change sstatus &c registers,
     // so don't enable until done with those registers.
     intr_on();
@@ -77,9 +80,14 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+    if (p->tick++ == p->interval && p->interval != 0){
+      // ctrapframe = p->trapframe;
+      memmove(trapframe_alarm,p->trapframe,512);
+      p->trapframe->epc = p->handler;
+    }
     yield();
-
+  }
   usertrapret();
 }
 
