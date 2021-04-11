@@ -106,6 +106,7 @@ struct proc {
   int interval;
   uint64 handler; 
   int tick;
+  char trapframe_alarm[512];
 };
 
 

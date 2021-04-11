@@ -6,7 +6,6 @@
 #include "proc.h"
 #include "defs.h"
 
-char trapframe_alarm[512];
 
 struct cpu cpus[NCPU];
 

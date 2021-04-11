@@ -6,7 +6,7 @@
 #include "proc.h"
 #include "defs.h"
 
-extern char trapframe_alarm[512];
+// extern char trapframe_alarm[512];
 
 struct spinlock tickslock;
 uint ticks;
@@ -83,7 +83,7 @@ usertrap(void)
   if(which_dev == 2){
     if (p->tick++ == p->interval && p->interval != 0){
       // ctrapframe = p->trapframe;
-      memmove(trapframe_alarm,p->trapframe,512);
+      memmove(p->trapframe_alarm,p->trapframe,512);
       p->trapframe->epc = p->handler;
     }
     yield();
